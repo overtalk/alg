@@ -1,17 +1,6 @@
-#include "head.hpp"
-////////////////////////////////////////////////
-////////////////////////////////////////////////
-void swap(std::vector<int> &src, int i, int j) {
-  int temp = src[i];
-  src[i] = src[j];
-  src[j] = temp;
-}
+#pragma once
 
-void show(const std::vector<int> &src) {
-  for (const auto &i : src)
-    std::cout << i << " ";
-  std::cout << std::endl;
-}
+#include "head.hpp"
 
 ////////////////////////////////////////////////
 ////////////////////////////////////////////////
