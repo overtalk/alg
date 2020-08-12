@@ -1,6 +1,9 @@
 cmake_minimum_required(VERSION 3.0)
 
+set(CMAKE_CXX_STANDARD 11)
+
 project(demo)
+
 
 # 查找某一个目录下面的所有源文件
 # 并将其保存到 DIR_SRCS 变量当中

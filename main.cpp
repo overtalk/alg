@@ -1,9 +1,9 @@
 #include "kmp.hpp"
 #include "search.hpp"
+#include "shuffle.hpp"
 #include "sort.hpp"
 
 int main() {
-  // sort about
   std::vector<int> bubble_src;
   for (int i = 15; i > 0; --i) {
     bubble_src.push_back(i);
@@ -11,6 +11,14 @@ int main() {
   std::vector<int> select_src = bubble_src;
   std::vector<int> quick_src = bubble_src;
   std::vector<int> heap_src = bubble_src;
+  std::vector<int> shuffle_src = bubble_src;
+
+  // shuffle about
+  shuffle(shuffle_src);
+  std::cout << " shuffle " << std::endl;
+  show(shuffle_src);
+  std::cout << "----------------------------------------" << std::endl;
+  // sort about
 
   show(bubble_src);
 
