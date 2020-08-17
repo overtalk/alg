@@ -1,4 +1,5 @@
 #include "kmp.hpp"
+#include "redpacket.hpp"
 #include "search.hpp"
 #include "shuffle.hpp"
 #include "sort.hpp"
@@ -39,4 +40,8 @@ int main() {
 
   // kmp
   std::cout << "kmp result = " << kmp("xxabababca", "abababca") << std::endl;
+
+  /////////////////////////////////////////////////////////////////////////////////////
+  /////////////////////////////////////////////////////////////////////////////////////
+  red_packet(10, 1000);
 }
