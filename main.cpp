@@ -16,32 +16,40 @@ int main() {
 
   // shuffle about
   shuffle(shuffle_src);
-  std::cout << " shuffle " << std::endl;
+  std::cout << "-------------------shuffle---------------------" << std::endl;
   show(shuffle_src);
-  std::cout << "----------------------------------------" << std::endl;
-  // sort about
 
+  // sort about
+  std::cout << "-------------------sort---------------------" << std::endl;
+  std::cout << "origin :        ";
   show(bubble_src);
 
   bubble(bubble_src);
+  std::cout << "bubble_sort :   ";
   show(bubble_src);
 
   select_sort(select_src);
+  std::cout << "select_sort :   ";
   show(select_src);
 
   quick_sort(quick_src);
+  std::cout << "quick_sort :    ";
   show(quick_src);
 
   heap_sort(heap_src);
+  std::cout << "heap_sort :     ";
   show(heap_src);
 
   // search about
+  std::cout << "----------------bin_search------------------" << std::endl;
   std::cout << "bin search result = " << bin_search(heap_src, 5) << std::endl;
 
   // kmp
+  std::cout << "-------------------kmp---------------------" << std::endl;
   std::cout << "kmp result = " << kmp("xxabababca", "abababca") << std::endl;
 
   /////////////////////////////////////////////////////////////////////////////////////
   /////////////////////////////////////////////////////////////////////////////////////
+  std::cout << "-----------------red_packet-------------------" << std::endl;
   red_packet(10, 1000);
 }
