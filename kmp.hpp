@@ -25,7 +25,6 @@ void build_next_table(char *target, int *next_table) {
       tail_set.insert(temp);
     }
 
-    // 最长子串
     int max = 0;
     for (const auto &iter : head_set) {
       if (tail_set.count(iter) > 0 && iter.size() > max) {
@@ -69,4 +68,12 @@ int kmp(char *src, char *target) {
 
   delete[] next;
   return -1;
+}
+
+////////////////////////////////////////
+////////////////////////////////////////
+void kmp_test() {
+  // kmp
+  std::cout << "-------------------kmp---------------------" << std::endl;
+  std::cout << "kmp result = " << kmp("xx--abababca", "abababca") << std::endl;
 }

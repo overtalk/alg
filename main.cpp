@@ -1,56 +1,77 @@
 #include "kmp.hpp"
 #include "lru.hpp"
+#include "lru_t.hpp"
 #include "redpacket.hpp"
 #include "search.hpp"
 #include "shuffle.hpp"
 #include "sort.hpp"
 
-int main() {
-  std::vector<int> bubble_src;
-  for (int i = 15; i > 0; --i) {
-    bubble_src.push_back(i);
+class MyClass {
+private:
+  static int value_;
+  int current_{0};
+
+public:
+  MyClass() {
+    current_ = ++value_;
+    std::cout << "MyClass - " << value_ << std::endl;
   }
-  std::vector<int> select_src = bubble_src;
-  std::vector<int> quick_src = bubble_src;
-  std::vector<int> heap_src = bubble_src;
-  std::vector<int> shuffle_src = bubble_src;
 
-  // shuffle about
-  shuffle(shuffle_src);
-  std::cout << "-------------------shuffle---------------------" << std::endl;
-  show(shuffle_src);
+  ~MyClass() { std::cout << "~MyClass - " << current_ << std::endl; }
 
-  // sort about
-  std::cout << "-------------------sort---------------------" << std::endl;
-  std::cout << "origin :        ";
-  show(bubble_src);
+  MyClass(const MyClass &) {
+    current_ = ++value_;
+    std::cout << "copy constructor - "
+              << "MyClass(const MyClass &) - " << value_ << std::endl;
+  };
 
-  bubble(bubble_src);
-  std::cout << "bubble_sort :   ";
-  show(bubble_src);
+  MyClass &operator=(const MyClass &) {
+    current_ = ++value_;
+    std::cout << "assignment constructor - "
+              << "MyClass &operator=(const MyClass &) - " << value_
+              << std::endl;
+  };
 
-  select_sort(select_src);
-  std::cout << "select_sort :   ";
-  show(select_src);
+  MyClass(MyClass &&) {
+    current_ = ++value_;
+    std::cout << "move copy constructor - "
+              << "MyClass(const MyClass &) - " << value_ << std::endl;
+  };
 
-  quick_sort(quick_src);
-  std::cout << "quick_sort :    ";
-  show(quick_src);
+  MyClass &operator=(MyClass &&) {
+    current_ = ++value_;
+    std::cout << "move assignment constructor - "
+              << "MyClass &operator=(const MyClass &) - " << value_
+              << std::endl;
+  };
+};
 
-  heap_sort(heap_src);
-  std::cout << "heap_sort :     ";
-  show(heap_src);
+int MyClass::value_ = 0;
 
-  // search about
-  std::cout << "----------------bin_search------------------" << std::endl;
-  std::cout << "bin search result = " << bin_search(heap_src, 5) << std::endl;
+void test_map() {
+  std::unordered_map<int, MyClass> mm_;
+  MyClass c;
 
-  // kmp
-  std::cout << "-------------------kmp---------------------" << std::endl;
-  std::cout << "kmp result = " << kmp("xx--abababca", "abababca") << std::endl;
+  auto temp = std::pair<int, MyClass>(1, c);
+  std::cout << "-----" << std::endl;
+  mm_.insert(temp);
+  std::cout << "-----" << std::endl;
+  mm_.insert(std::pair<int, MyClass>(2, c));
+  std::cout << "-----" << std::endl;
 
-  /////////////////////////////////////////////////////////////////////////////////////
-  /////////////////////////////////////////////////////////////////////////////////////
-  std::cout << "-----------------red_packet-------------------" << std::endl;
-  red_packet(10, 1000);
+  for (auto &iter : mm_) {
+    std::cout << iter.first << std::endl;
+  }
+}
+
+int main() {
+  test_map();
+
+  lru_test();
+  lru_t_test();
+  shuffle_test();
+  sort_test();
+  search_test();
+  kmp_test();
+  red_packet_test();
 }
