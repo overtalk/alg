@@ -8,16 +8,23 @@
 #include <unordered_map>
 
 template <typename key_t, typename value_t> class entry {
-private:
+public:
   key_t key_;
   value_t value_;
   std::chrono::seconds ttl_;
   std::chrono::system_clock::time_point access_time_;
 
-public:
   entry(key_t key, value_t value, std::chrono::seconds ttl,
         std::chrono::system_clock::time_point access_time)
       : key_(key), value_(value), ttl_(ttl), access_time_(access_time) {}
+
+  entry(key_t key, value_t value,
+        std::chrono::system_clock::time_point access_time)
+      : key_(key), value_(value), ttl_(ttl_), access_time_(access_time) {}
+
+  entry(key_t key, value_t value, std::chrono::seconds ttl)
+      : key_(key), value_(value), ttl_(ttl),
+        access_time_(std::chrono::system_clock::now()) {}
 
   bool expired(std::chrono::system_clock::time_point now) {
     return (ttl_.count() > 0) &&
@@ -25,12 +32,12 @@ public:
                 .count() > ttl_.count());
   }
 
-  void set_access_time(std::chrono::system_clock::time_point now) {
-    access_time_ = now;
-  }
-  void set_ttl(std::chrono::seconds ttl) { ttl_ = ttl; }
-  void set_key(key_t key) { key_ = key; }
-  void set_value(value_t value) { value_ = value; }
+  // void set_access_time(std::chrono::system_clock::time_point now) {
+  //  access_time_ = now;
+  //}
+  // void set_ttl(std::chrono::seconds ttl) { ttl_ = ttl; }
+  // void set_key(key_t key) { key_ = key; }
+  // void set_value(value_t value) { value_ = value; }
 
   ~entry() {
     // TODO: del from heap?
@@ -46,6 +53,8 @@ template <typename key_t, typename value_t> class LruCache {
 public:
   using entry_t = entry<key_t, value_t>;
   using entry_t_ptr = entry<key_t, value_t> *;
+  using kv_pair_t = std::pair<key_t, entry_t_ptr>;
+  using list_iterator_t = typename std::list<kv_pair_t>::iterator;
 
 private:
   int64_t size_;
@@ -53,8 +62,9 @@ private:
   std::chrono::seconds ttl_;
 
   std::mutex mutex_;
-  std::list<entry_t_ptr> list_;
-  std::unordered_map<key_t, entry_t_ptr> table_;
+  std::list<kv_pair_t> items_list_; // list store the real data
+  std::unordered_map<key_t, list_iterator_t>
+      items_map_; // map store the key-iter pair
 
 public:
   LruCache(int64_t capacity, std::chrono::seconds ttl = std::chrono::seconds(0))
@@ -65,8 +75,8 @@ public:
   value_t &Get(key_t key) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    auto iter = table_.find(key);
-    if (iter == table_.end()) {
+    auto iter = items_map_.find(key);
+    if (iter == items_map_.end()) {
       return nullptr;
     }
 
@@ -85,8 +95,8 @@ public:
   value_t &Peek(key_t key) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    auto iter = table_.find(key);
-    if (iter == table_.end()) {
+    auto iter = items_map_.find(key);
+    if (iter == items_map_.end()) {
       return nullptr;
     }
 
@@ -98,11 +108,12 @@ public:
     return iter->value_;
   }
 
+  // IsExisted check whether a value is existed in the cache and not expired.
   bool IsExist(key_t key) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    auto iter = table_.find(key);
-    if (iter == table_.end()) {
+    auto iter = items_map_.find(key);
+    if (iter == items_map_.end()) {
       return nullptr;
     }
 
@@ -110,67 +121,127 @@ public:
     return iter->expired(now);
   }
 
-  void Set(key_t key, value_t &&value, std::chrono::seconds ttl) {
+  // SetWithTTL sets a value in the cache with a TTL.
+  void SetWithTTL(key_t key, value_t value, std::chrono::seconds ttl) {
     std::lock_guard<std::mutex> lock(mutex_);
 
     if (!replace_old_item(key, value, ttl)) {
+      add_new(key, std::move(value), ttl);
     }
   }
 
-private:
-  void add_new(std::string &&key, value_t &&value, std::chrono::seconds ttl) {
-    auto now = std::chrono::system_clock::now();
-    entry_t e(key, std::move(value), now, ttl);
-    std::pair<key_t, entry_t_ptr> pair(key, std::move(&e));
+  // Set sets a value in the cache with a TTL.
+  void Set(key_t key, value_t value) { SetWithTTL(key, value, ttl_); }
 
-    list_.insert(pair);
-    table_.insert(key, pair)
+  // SetIfAbsent will set the value in the cache if not present.
+  // If the value exists in the cache, we don't set it.
+  void SetIfAbsent(key_t key, value_t value) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    auto iter = items_map_.find(key);
+    if (iter != items_map_.end()) {
+      auto now = std::chrono::system_clock::now();
+      if (!iter->second->second->expired(now)) {
+        iter->second->second->ttl_ = ttl;
+        iter->second->second->access_time_ = now;
+        move_to_front(iter);
+      }
+    }
+
+    if (!replace_old_item(key, value, ttl)) {
+      add_new(key, std::move(value), ttl);
+    }
+  }
+
+  // Delete removes an entry from the cache, and returns if the entry existed.
+  bool Delete(key_t key) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    auto iter = items_map_.find(key);
+    if (iter != items_list_.end()) {
+    }
+  }
+
+  // SetExpired will set an entry expired from the cache and returns if the
+  // entry existed.
+  bool SetExpired(key_t key) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    auto iter = items_map_.find(key);
+    if (iter != items_map_.end()) {
+      iter->second->second->ttl_ = 1;
+      return true;
+    }
+
+    return false;
+  }
+
+private:
+  void check_capacity() {
+    while (size_ > capacity_) {
+      auto iter = items_list_.end();
+      iter--;
+      items_map_.erase(iter->second->key_);
+      items_list_.erase(iter);
+      size_--;
+    }
+  }
+
+  void add_new(key_t key, value_t value, std::chrono::seconds ttl) {
+    items_list_.push_front(
+        std::make_pair(key, &entry_t(key, std::move(value), ttl)));
+    size_++;
+    items_map_.insert(std::make_pair(key, items_list_.begin()));
+    check_capacity();
   }
 
   bool replace_old_item(key_t &key, value_t &value, std::chrono::seconds ttl) {
     auto now = std::chrono::system_clock::now();
-    auto iter = table_.find(key);
+    auto iter = items_map_.find(key);
 
     // if existed, just replace its value.
-    if (iter != table_.end()) {
-      iter->second->set_value(value);
-      iter->second->set_ttl(ttl);
-      iter->second->set_access_time(now);
+    if (iter != items_map_.end()) {
+      iter->second->second->value_ = value;
+      iter->second->second->ttl_ = ttl;
+      iter->second->second->access_time_ = now;
       move_to_front(iter->second);
       return true;
     }
 
+    // if the list is empty
+    if (items_list_.empty()) {
+      return false;
+    }
+
     // replace expired item of spare one.
-    if (table_.empty()) {
-      return false;
-    }
-
-    iter = table_.end();
+    iter = items_map_.end();
     iter--;
-    if (size_ < capacity_ && !iter->second->expired(now)) {
+    if (size_ < capacity_ && !iter->second->second->expired(now)) {
       return false;
     }
 
-    table_.erase(key);
-    iter->second->set_key(key);
-    iter->second->set_value(value);
-    iter->second->set_ttl(ttl);
-    iter->second->set_access_time(now);
-    table_.insert(std::move(std::make_pair(key, iter->second)));
+    items_map_.erase(key);
+    iter->second->second->key_ = key;
+    iter->second->second->value_ = value;
+    iter->second->second->ttl_ = ttl;
+    iter->second->second->access_time_ = now;
+    items_map_.insert(std::move(std::make_pair(key, iter->second)));
     move_to_front(iter->second);
     return true;
   }
 
   // move_to_front move the iter to front
-  void move_to_front(entry_t_ptr iter) {
-    if (iter == list_.begin() || iter == list_.end())
+  void move_to_front(list_iterator_t &iter) {
+    if (iter == items_list_.begin() || iter == items_list_.end())
       return;
 
-    list_.splice(list_.begin(), list_, iter, std::next(iter));
+    items_list_.splice(items_list_.begin(), items_list_, iter);
   }
 };
 
+/////////////////////////////////////////////////////////////////////////////////////
+/////////////////////////////////////////////////////////////////////////////////////
 void lru_test() {
   LruCache<int, int> cache(100, std::chrono::seconds(60));
-  cache.Set(1, 2, std::chrono::seconds(60));
+  cache.SetWithTTL(1, 2, std::chrono::seconds(60));
 }
