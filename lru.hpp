@@ -153,15 +153,6 @@ public:
     }
   }
 
-  // Delete removes an entry from the cache, and returns if the entry existed.
-  bool Delete(key_t key) {
-    std::lock_guard<std::mutex> lock(mutex_);
-
-    auto iter = items_map_.find(key);
-    if (iter != items_list_.end()) {
-    }
-  }
-
   // SetExpired will set an entry expired from the cache and returns if the
   // entry existed.
   bool SetExpired(key_t key) {
@@ -174,6 +165,37 @@ public:
     }
 
     return false;
+  }
+
+  // Delete removes an entry from the cache, and returns if the entry existed.
+  bool Delete(key_t key) {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    auto iter = items_map_.find(key);
+    if (iter != items_map_.end()) {
+      items_list_.erase(iter);
+      size_--;
+      items_map_.erase(key);
+      return true;
+    }
+    return false;
+  }
+  // Clear will clear the entire cache.
+  void Clear() {
+    std::lock_guard<std::mutex> lock(mutex_);
+
+    size_ = 0;
+    items_list_.clear();
+    items_map_.clear();
+  }
+
+  // SetCapacity will set the capacity of the cache. If the capacity is
+  // smaller, and the current cache size exceed that capacity, the cache
+  // will be shrank.
+  void SetCapacity(size_t capacity) {
+    std::lock_guard<std::mutex> lock(mutex_);
+    capacity_ = capacity;
+    check_capacity();
   }
 
 private:
