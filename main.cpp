@@ -67,11 +67,14 @@ void test_map() {
 int main() {
   test_map();
 
-  lru_test();
-  lru_t_test();
   shuffle_test();
   sort_test();
   search_test();
   kmp_test();
   red_packet_test();
+
+  lru_t_test();
+  lru_test();
+
+  std::cout << std::chrono::seconds(-1).count() << std::endl;
 }

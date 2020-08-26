@@ -7,6 +7,12 @@ public:
   typedef typename std::pair<key_t, value_t> key_value_pair_t;
   typedef typename std::list<key_value_pair_t>::iterator list_iterator_t;
 
+private:
+  std::list<key_value_pair_t> _cache_items_list;
+  std::unordered_map<key_t, list_iterator_t> _cache_items_map;
+  size_t _max_size;
+
+public:
   lru_cache(size_t max_size) : _max_size(max_size) {}
 
   void put(const key_t &key, const value_t &value) {
@@ -42,11 +48,6 @@ public:
   }
 
   size_t size() const { return _cache_items_map.size(); }
-
-private:
-  std::list<key_value_pair_t> _cache_items_list;
-  std::unordered_map<key_t, list_iterator_t> _cache_items_map;
-  size_t _max_size;
 };
 
 void lru_t_test() {
@@ -57,6 +58,7 @@ void lru_t_test() {
   lru_.put(4, 4);
   lru_.put(5, 5);
   lru_.put(6, 6);
-  std::cout << "-------------------lru cache---------------------" << std::endl;
+  std::cout << "-------------------lru_t cache---------------------"
+            << std::endl;
   std::cout << lru_.size() << std::endl;
 }
