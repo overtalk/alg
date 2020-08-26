@@ -86,7 +86,7 @@ public:
   bool Peek(key_t key, value_t &value) {
     std::lock_guard<std::mutex> lock(mutex_);
 
-    auto map_iter = list_iter_map_.find(key);
+    auto map_iter = list_iter_map_.find(keyx);
     if (map_iter == list_iter_map_.end()) {
       return false;
     }

@@ -4,11 +4,6 @@ set(CMAKE_CXX_STANDARD 11)
 
 project(demo)
 
+FILE(GLOB SC_FILES "*.cpp" "*.hpp")
 
-# 查找某一个目录下面的所有源文件
-# 并将其保存到 DIR_SRCS 变量当中
-aux_source_directory(. DIR_SRCS)
- 
-add_executable(Demo ${DIR_SRCS})
-
- 
+add_executable(${PROJECT_NAME} ${SC_FILES})
