@@ -6,6 +6,7 @@
 #include <list>
 #include <mutex>
 #include <unordered_map>
+#include <thread>
 
 template<typename key_t, typename value_t>
 class entry
