@@ -1,0 +1,3 @@
+# ignore some code from clang-format checks
+
+3rdparty/*
