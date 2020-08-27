@@ -5,7 +5,6 @@
 #include <iostream>
 #include <list>
 #include <mutex>
-#include <unistd.h>
 #include <unordered_map>
 
 template <typename key_t, typename value_t> class entry {
@@ -286,12 +285,12 @@ void lru_test() {
   cache.SetWithTTL(1, 20, std::chrono::seconds(2));
   std::cout << "item 1 is exist : " << cache.IsExist(1) << std::endl;
   std::cout << cache.Get(1, res) << " - " << res << std::endl;
-  sleep(3);
+  std::this_thread::sleep_for(std::chrono::milliseconds(3*1000));
   std::cout << cache.Get(1, res) << " - " << res << std::endl;
 
   cache.SetIfAbsent(2, 200);
   std::cout << cache.Get(2, res) << " - " << res << std::endl;
   cache.SetExpired(2);
-  sleep(1);
+  std::this_thread::sleep_for(std::chrono::milliseconds(1 * 1000));
   std::cout << cache.Get(2, res) << " - " << res << std::endl;
 }
