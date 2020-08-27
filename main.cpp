@@ -23,27 +23,30 @@ public:
     current_ = ++value_;
     std::cout << "copy constructor - "
               << "MyClass(const MyClass &) - " << value_ << std::endl;
-  };
-
-  MyClass &operator=(const MyClass &) {
-    current_ = ++value_;
-    std::cout << "assignment constructor - "
-              << "MyClass &operator=(const MyClass &) - " << value_
-              << std::endl;
-  };
+  }
 
   MyClass(MyClass &&) {
     current_ = ++value_;
     std::cout << "move copy constructor - "
               << "MyClass(const MyClass &) - " << value_ << std::endl;
-  };
+  }
 
-  MyClass &operator=(MyClass &&) {
+  MyClass &operator=(const MyClass &mc) {
+    current_ = ++value_;
+    std::cout << "assignment constructor - "
+              << "MyClass &operator=(const MyClass &) - " << value_
+              << std::endl;
+    return *this;
+  }
+
+  MyClass &operator=(MyClass &&mc) {
     current_ = ++value_;
     std::cout << "move assignment constructor - "
               << "MyClass &operator=(const MyClass &) - " << value_
               << std::endl;
-  };
+
+    return *this;
+  }
 };
 
 int MyClass::value_ = 0;
@@ -75,6 +78,4 @@ int main() {
 
   lru_t_test();
   lru_test();
-
-  std::cout << std::chrono::seconds(-1).count() << std::endl;
 }

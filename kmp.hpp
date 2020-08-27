@@ -75,5 +75,7 @@ int kmp(char *src, char *target) {
 void kmp_test() {
   // kmp
   std::cout << "-------------------kmp---------------------" << std::endl;
-  std::cout << "kmp result = " << kmp("xx--abababca", "abababca") << std::endl;
+  char src[] = "xx--abababca";
+  char target[] = "abababca";
+  std::cout << "kmp result = " << kmp(src, target) << std::endl;
 }
