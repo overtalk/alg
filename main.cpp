@@ -7,6 +7,7 @@
 #include "shuffle.hpp"
 #include "singleton.hpp"
 #include "sort.hpp"
+#include "timer.hpp"
 
 class MyClass
 {
@@ -90,4 +91,6 @@ int main()
 
     lru_t_test();
     lru_test();
+
+    timer_test();
 }
