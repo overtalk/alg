@@ -4,6 +4,7 @@
 #include "redpacket.hpp"
 #include "search.hpp"
 #include "shuffle.hpp"
+#include "singleton.hpp"
 #include "sort.hpp"
 
 class MyClass {
