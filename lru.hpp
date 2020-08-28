@@ -1,12 +1,6 @@
 #pragma once
 
-#include <chrono>
-#include <ctime>
-#include <iostream>
-#include <list>
-#include <mutex>
-#include <unordered_map>
-#include <thread>
+#include "head.hpp"
 
 template<typename key_t, typename value_t>
 class entry
