@@ -1,8 +1,6 @@
 #pragma once
 
 #include "head.hpp"
-#include <queue>
-#include <chrono>
 
 class TimerMgr;
 
@@ -66,6 +64,22 @@ private:
 
 class TimerMgr final
 {
+private:
+    class CompareTimer
+    {
+    public:
+        bool operator()(const Timer::Ptr& left, const Timer::Ptr& right) const
+        {
+            const auto startDiff = left->GetStartTime() - right->GetStartTime();
+            const auto lastDiff = left->GetStartTime() - right->GetStartTime();
+            const auto diff = startDiff.count() + lastDiff.count();
+            return diff > 0;
+        }
+    };
+
+    // priority_queue : 优先队列，类似heap
+    std::priority_queue<Timer::Ptr, std::vector<Timer::Ptr>, CompareTimer> timers_;
+
 public:
     using Ptr = std::shared_ptr<TimerMgr>;
 
@@ -128,21 +142,6 @@ public:
             timers_.pop();
         }
     }
-
-private:
-    class CompareTimer
-    {
-    public:
-        bool operator()(const Timer::Ptr& left, const Timer::Ptr& right) const
-        {
-            const auto startDiff = left->GetStartTime() - right->GetStartTime();
-            const auto lastDiff = left->GetStartTime() - right->GetStartTime();
-            const auto diff = startDiff.count() + lastDiff.count();
-            return diff > 0;
-        }
-    };
-
-    std::priority_queue<Timer::Ptr, std::vector<Timer::Ptr>, CompareTimer> timers_;
 };
 
 void timer_test()
@@ -158,7 +157,8 @@ void timer_test()
 
     while (!flag)
     {
+        std::this_thread::sleep_for(std::chrono::milliseconds(1));
+        std::cout << "+ sleep 1 millisecond +" << std::endl;
         timerMgr.Schedule();
-        std::this_thread::sleep_for(std::chrono::milliseconds(100));
     }
 }
